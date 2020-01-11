@@ -13,6 +13,8 @@ module OauthBwergemn
 
       def has_auth_scopes?
         endpoint_protected? && !authorization_type_oauth2.empty?
+      rescue
+        false
       end
 
       def auth_scopes
@@ -31,6 +33,8 @@ module OauthBwergemn
 
       def endpoint_authorizations
         api_context.options[:route_options][:auth][:scopes]
+      rescue
+        nil
       end
 
       def authorization_type_oauth2
