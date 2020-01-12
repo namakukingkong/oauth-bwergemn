@@ -19,16 +19,16 @@ module OauthBwergemn
     end
 
     def token
-      token = if request.headers['Authorization'].present?
+      if request.headers['Authorization'].present?
         if request.headers['Authorization'].include?('bearer')
-          request.headers['Authorization'].try('split', 'bearer').try(:last).try(:strip)
+          token = request.headers['Authorization'].try('split', 'bearer').try(:last).try(:strip)
         elsif request.headers['Authorization'].include?('Bearer')
-          request.headers['Authorization'].try('split', 'Bearer').try(:last).try(:strip)
+          token = request.headers['Authorization'].try('split', 'Bearer').try(:last).try(:strip)
         else
-          request.headers['Authorization']
+          token = request.headers['Authorization']
         end
       else
-        request.parameters['access_token']
+        token = request.parameters['access_token']
       end
       token
     end
@@ -36,14 +36,6 @@ module OauthBwergemn
     ############
     # Authorization control.
     ############
-
-    def endpoint_protected?
-      auth_strategy.endpoint_protected?
-    end
-
-    def optional_endpoint?
-      auth_strategy.optional_endpoint?
-    end
 
     def args
       results = {}
@@ -62,13 +54,9 @@ module OauthBwergemn
       unless access.present?
         raise OauthBwergemn::Errors::InvalidToken
       end
-      resource = begin
-                   # rubocop:disable Security/Eval
-                   eval(OauthBwergemn.resources[args[:as].to_sym]).find_by(id: access.resource_owner_id)
-                 # rubocop:enable Security/Eval
-                 rescue
-                   nil
-                 end
+      # rubocop:disable Security/Eval
+      resource = eval(OauthBwergemn.resources[args[:as].to_sym]).find_by(id: access.resource_owner_id) rescue nil
+      # rubocop:enable Security/Eval
       {
         resource_owner:      resource,
         resource_credential: {
@@ -92,25 +80,16 @@ module OauthBwergemn
       context.extend(OauthBwergemn::AuthMethods)
 
       context.protected_endpoint = endpoint_protected?
-      context.optional_endpoint  = optional_endpoint?
 
-      return unless context.protected_endpoint? || context.optional_endpoint?
+      return unless context.protected_endpoint?
 
       self.the_request = env
 
-      if token.present? && (context.protected_endpoint? || context.optional_endpoint?)
-        response                     = authorize!
-        context.resource_token       = token
-        context.resource_owner       = begin
-                                         response[:resource_owner]
-                                       rescue
-                                         nil
-                                       end
-        context.resource_credentials = begin
-                                         response[:resource_credentials]
-                                       rescue
-                                         nil
-                                       end
+      if token.present? && context.protected_endpoint?
+        response               = authorize!
+        context.resource_token = token
+        context.resource_owner = response[:resource_owner] rescue nil
+        context.resource_credentials = response[:resource_credentials] rescue nil
       elsif token.nil? && context.protected_endpoint?
         raise OauthBwergemn::Errors::InvalidToken
       end

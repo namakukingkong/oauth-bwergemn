@@ -730,8 +730,8 @@ Style/CommentedKeyword:
   Enabled: true
 
 Style/ConditionalAssignment:
-  Enabled: true
-  EnforcedStyle: assign_to_condition
+  Enabled: false
+  EnforcedStyle: assign_inside_condition
   SingleLineConditionsOnly: true
   IncludeTernaryExpressions: true
 
@@ -952,7 +952,7 @@ Style/RedundantSortBy:
   Enabled: true
 
 Style/RescueModifier:
-  Enabled: true
+  Enabled: false
 
 Style/RescueStandardError:
   Enabled: true

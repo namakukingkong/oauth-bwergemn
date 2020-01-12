@@ -13,14 +13,6 @@ module OauthBwergemn
       @protected_endpoint || false
     end
 
-    def optional_endpoint=(opt)
-      @optional_endpoint = opt
-    end
-
-    def optional_endpoint?
-      @optional_endpoint || false
-    end
-
     # rubocop:disable Lint/DuplicateMethods
     def resource_token
       @_resource_token
