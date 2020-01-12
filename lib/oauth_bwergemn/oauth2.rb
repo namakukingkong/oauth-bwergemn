@@ -36,6 +36,9 @@ module OauthBwergemn
     ############
     # Authorization control.
     ############
+    def endpoint_protected?
+      auth_strategy.endpoint_protected?
+    end
 
     def args
       results = {}

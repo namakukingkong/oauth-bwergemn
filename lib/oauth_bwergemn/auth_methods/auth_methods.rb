@@ -2,9 +2,9 @@
 
 module OauthBwergemn
   module AuthMethods
-    attr_accessor :the_access_token, :current_user, :credentials
-    attr_accessor :resource__token, :resource_owner, :resource_credentials
+    attr_accessor :resource_token, :resource_owner, :resource_credentials
 
+    # rubocop:disable Lint/DuplicateMethods
     def protected_endpoint=(protected)
       @protected_endpoint = protected
     end
@@ -13,7 +13,6 @@ module OauthBwergemn
       @protected_endpoint || false
     end
 
-    # rubocop:disable Lint/DuplicateMethods
     def resource_token
       @_resource_token
     end
