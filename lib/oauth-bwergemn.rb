@@ -21,6 +21,7 @@ module OauthBwergemn
   extend OauthBwergemn::Configuration
   define_setting :auth_strategy, 'hub'
   define_setting :resources, user: 'User'
+  define_setting :default_resources, :user
 
   def self.config_resources
     resources

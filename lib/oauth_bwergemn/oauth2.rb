@@ -52,13 +52,34 @@ module OauthBwergemn
       results
     end
 
+    def is_args_include_validate?
+      if args.keys.include?(:validate) && ![true, false].include?(args[:validate])
+        raise OauthBwergemn::Errors::InvalidScope.new("Not valid scope '#{args[:validate]}' in `oauth2 scope`")
+      end
+      args.keys.include?(:validate)
+    end
+
+    def is_args_include_as?
+      args.keys.include?(:as)
+    end
+
+    def token_optional?
+      is_args_include_validate? && [true, false].include?(args[:validate]) && args[:validate].eql?(false)
+    end
+
+    def token_required?
+      is_args_include_validate? && [true, false].include?(args[:validate]) && args[:validate].eql?(true) || is_args_include_valudate?.blank?
+    end
+
     def authorize!
       access = Doorkeeper::AccessToken.find_by(token: token)
       unless access.present?
         raise OauthBwergemn::Errors::InvalidToken
       end
+      resource_as = (is_args_include_as? ? args[:as] : OauthBwergemn.default_resources)
+
       # rubocop:disable Security/Eval
-      resource = eval(OauthBwergemn.resources[args[:as].to_sym]).find_by(id: access.resource_owner_id) rescue nil
+      resource = eval(OauthBwergemn.resources[resource_as.to_sym]).find_by(id: access.resource_owner_id) rescue nil
       # rubocop:enable Security/Eval
       {
         resource_owner:      resource,
@@ -87,13 +108,18 @@ module OauthBwergemn
       return unless context.protected_endpoint?
 
       self.the_request = env
-
-      if token.present? && context.protected_endpoint?
+      if token_optional? && context.protected_endpoint?
+        context.resource_token       = token
+        context.resource_owner       = nil
+        context.resource_credentials = nil
+      elsif token.present? && token_required? && context.protected_endpoint?
         response               = authorize!
         context.resource_token = token
         context.resource_owner = response[:resource_owner] rescue nil
         context.resource_credentials = response[:resource_credentials] rescue nil
-      elsif token.nil? && context.protected_endpoint?
+      elsif context.resource_owner.nil? && context.protected_endpoint?
+        raise OauthBwergemn::Errors::InvalidToken
+      else
         raise OauthBwergemn::Errors::InvalidToken
       end
     end
