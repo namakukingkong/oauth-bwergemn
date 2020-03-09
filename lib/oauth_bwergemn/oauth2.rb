@@ -112,6 +112,11 @@ module OauthBwergemn
         context.resource_token       = token
         context.resource_owner       = nil
         context.resource_credentials = nil
+        response = authorize! rescue nil
+        if response.present?
+          context.resource_owner = response[:resource_owner] rescue nil
+          context.resource_credentials = response[:resource_credentials] rescue nil
+        end
       elsif token.present? && token_required? && context.protected_endpoint?
         response               = authorize!
         context.resource_token = token
