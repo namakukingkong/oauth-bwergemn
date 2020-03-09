@@ -68,7 +68,7 @@ module OauthBwergemn
     end
 
     def token_required?
-      is_args_include_validate? && [true, false].include?(args[:validate]) && args[:validate].eql?(true) || is_args_include_valudate?.blank?
+      is_args_include_validate? && [true, false].include?(args[:validate]) && args[:validate].eql?(true) || is_args_include_validate?.blank?
     end
 
     def authorize!
