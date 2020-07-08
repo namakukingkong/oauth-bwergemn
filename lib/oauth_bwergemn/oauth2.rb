@@ -49,18 +49,30 @@ module OauthBwergemn
     def scopes
       results = []
       auth_strategy.auth_scopes.map { |s| (results << s) unless s.is_a?(Hash) }
-      results
+      results.map! &:to_sym
+    end
+
+    def access_scopes access
+      access.scopes.all.map!(&:to_sym) rescue []
     end
 
     def is_args_include_validate?
-      if args.keys.include?(:validate) && ![true, false].include?(args[:validate])
+      if args.key?(:validate) && ![true, false].include?(args[:validate])
         raise OauthBwergemn::Errors::InvalidScope.new("Not valid scope '#{args[:validate]}' in `oauth2 scope`")
       end
-      args.keys.include?(:validate)
+      args.key?(:validate)
     end
 
     def is_args_include_as?
-      args.keys.include?(:as)
+      args.key?(:as)
+    end
+
+    def scope_authorize! access
+      if scopes.present? && access
+        unless (scopes & (access_scopes access)).present?
+          raise OauthBwergemn::Errors::InvalidScope.new('OAuth Scope is disallowed')
+        end
+      end
     end
 
     def token_optional?
@@ -76,16 +88,16 @@ module OauthBwergemn
       unless access.present?
         raise OauthBwergemn::Errors::InvalidToken
       end
+      scope_authorize! access
       resource_as = (is_args_include_as? ? args[:as] : OauthBwergemn.default_resources)
-
       # rubocop:disable Security/Eval
-      resource = eval(OauthBwergemn.resources[resource_as.to_sym]).find_by(id: access.resource_owner_id) rescue nil
+      resource = eval(OauthBwergemn.resources[resource_as.to_sym]).where(id: access.resource_owner_id).last rescue nil
       # rubocop:enable Security/Eval
       {
         resource_owner:      resource,
         resource_credential: {
           access_token:  access.token,
-          scopes:        scopes,
+          scopes:        (access_scopes access),
           token_type:    'bearer',
           expires_in:    access.expires_in,
           refresh_token: access.refresh_token,
