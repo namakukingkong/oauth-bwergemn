@@ -53,7 +53,11 @@ module OauthBwergemn
     end
 
     def access_scopes access
-      access.scopes.all.map!(&:to_sym) rescue []
+      if OauthBwergemn.is_custom_scopes
+        access.scopes.map!(&:to_sym) rescue []
+      else
+        access.scopes.all.map!(&:to_sym) rescue []
+      end
     end
 
     def is_args_include_validate?
@@ -88,11 +92,15 @@ module OauthBwergemn
       unless access.present?
         raise OauthBwergemn::Errors::InvalidToken
       end
-      scope_authorize! access
       resource_as = (is_args_include_as? ? args[:as] : OauthBwergemn.default_resources)
       # rubocop:disable Security/Eval
       resource = eval(OauthBwergemn.resources[resource_as.to_sym]).where(id: access.resource_owner_id).last rescue nil
       # rubocop:enable Security/Eval
+      if OauthBwergemn.is_custom_scopes
+        scope_authorize! resource
+      else
+        scope_authorize! access
+      end
       {
         resource_owner:      resource,
         resource_credential: {

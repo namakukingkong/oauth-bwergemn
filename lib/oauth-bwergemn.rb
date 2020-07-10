@@ -22,6 +22,7 @@ module OauthBwergemn
   define_setting :auth_strategy, 'hub'
   define_setting :resources, user: 'User'
   define_setting :default_resources, :user
+  define_setting :is_custom_scopes, false
 
   def self.config_resources
     resources
