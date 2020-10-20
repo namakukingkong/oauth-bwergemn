@@ -46,6 +46,10 @@ module OauthBwergemn
       results
     end
 
+    def sync_scopes_from resource , to:
+      to.update(scopes: resource.scopes.join(',')) rescue nil
+    end
+
     def scopes
       results = []
       auth_strategy.auth_scopes.map { |s| (results << s) unless s.is_a?(Hash) }
@@ -96,6 +100,7 @@ module OauthBwergemn
       # rubocop:disable Security/Eval
       resource = eval(OauthBwergemn.resources[resource_as.to_sym]).where(id: access.resource_owner_id).last rescue nil
       # rubocop:enable Security/Eval
+      sync_scopes_from resource, to: access
       if OauthBwergemn.is_custom_scopes
         scope_authorize! resource
       else
