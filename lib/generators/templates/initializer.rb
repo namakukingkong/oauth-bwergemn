@@ -1,5 +1,7 @@
 OauthBwergemn.setup do |config|
   # your authentication server
-  config.auth_strategy = "hub"
-  config.resources = { user: "Models::User" }  # { admin: "Models::Admin", user: "Models::User" , moderator: "Models::Moderator" }
+  config.auth_strategy     = "hub"
+  config.is_custom_scopes  = false
+  config.resources         = { user: "Models::Auth" } # { admin: "Models::Admin", user: "Models::User" , moderator: "Models::Moderator" }
+  config.default_resources = :user
 end
